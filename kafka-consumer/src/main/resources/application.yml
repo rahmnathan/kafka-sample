@@ -7,4 +7,10 @@ logging:
 camel:
   component:
     kafka:
-      brokers: 192.168.1.21:9092
+      configuration:
+        brokers: kafka-localhost:9092
+        sasl-jaas-config: org.apache.kafka.common.security.scram.ScramLoginModule required username="kafka-consumer" password="pw123";
+        security-protocol: SASL_SSL
+        sasl-mechanism: SCRAM-SHA-512
+        client-id: test
+        group-id: test

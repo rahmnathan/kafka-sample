@@ -17,6 +17,7 @@ import java.util.stream.IntStream;
 @Service
 @AllArgsConstructor
 public class CamelRouteService {
+    private static final String JURISDICTION_TOPIC_PROPERTY = "jurisdictionProperty";
     private static final String KAFKA_PRODUCER_ROUTE = "direct:send-kafka-message";
     private final ProducerTemplate template;
     private final CamelContext context;
@@ -27,7 +28,7 @@ public class CamelRouteService {
             @Override
             public void configure() throws Exception {
                 from(KAFKA_PRODUCER_ROUTE)
-                        .to("kafka:test-topic")
+                        .toD("kafka:${header." + JURISDICTION_TOPIC_PROPERTY + "}")
                         .end();
             }
         });
@@ -39,8 +40,10 @@ public class CamelRouteService {
         var start = LocalDateTime.now();
 
         IntStream.range(0, numberOfMessages).parallel().forEach(num -> {
-            log.info("Sending message: {}", num);
-            template.sendBody(KAFKA_PRODUCER_ROUTE, "Message number: " + num);
+            template.send(KAFKA_PRODUCER_ROUTE, exchange -> {
+                exchange.getIn().setHeader(JURISDICTION_TOPIC_PROPERTY, "test-topic");
+                exchange.getIn().setBody("Message number: " + num);
+            });
         });
 
         var durationSeconds = ChronoUnit.SECONDS.between(start, LocalDateTime.now());
